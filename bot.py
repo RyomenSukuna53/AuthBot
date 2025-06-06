@@ -1,24 +1,20 @@
-from pyrogram import Client, filters
-from pyrogram.types import Message
-import random
-from AuthNex.Database import user_col, sessions_col
+from pyrogram import Client
+from io import BytesIO
 
-# 🔐 AuthGiverBot
-auth_bot = Client(
-    "AuthGiverBot",
-    api_id=27548865,  # 🔁 Replace with your API ID
-    api_hash="db07e06a5eb288c706d4df697b71ab61",  # 🔁 Replace with your API Hash
-    bot_token="7883663341:AAEXp8lzLUlY5JVmF770v8bnmp8lsklXhgQ"  # 🔁 Replace with Auth Bot Token
-)
+@app.on_message(filters.command("getpfp"))
+async def get_user_pfp(client, message):
+    user = message.from_user
+    photos = await client.get_profile_photos(user.id, limit=1)
 
-# 🟢 Store codes temporarily
-code_store = {}
+    if not photos:
+        return await message.reply("❌ No profile picture found.")
 
-@auth_bot.on_message(filters.command("start") & filters.private)
-async def start_msg(_, m: Message):
-    await m.reply_text(
-        "**👋 Welcome to AuthNex Helper Bot!**\n\n"
-        "Use /code <your_mail@AuthNex.Codes> to get your login authentication code.",
-        disable_web_page_preview=True
+    # Download the photo
+    file = await client.download_media(photos[0].file_id)
+
+    # Send the photo with a caption
+    await message.reply_photo(
+        photo=file,
+        caption=f"👤 **{user.first_name}'s Profile Picture**",
+        parse_mode="markdown"
     )
-
